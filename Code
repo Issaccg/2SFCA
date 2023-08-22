@@ -1,0 +1,70 @@
+   ''''''2SFCA，服务半径d0为0.5个小时，计算可达性结果保存在第9列
+   ''''''d为乡镇行政中心距离养老机构的时间，摩擦系数为1；乡镇为8个，养老机构为14个'''''''
+
+   
+Sub Cal2SFCA()
+    Const xiangNum As Integer = 118 ''''''乡镇数
+    Const YanglaoNum As Integer = 275 '''''敬老院数
+    Const xiangToLao As Long = xiangNum * YanglaoNum + 1 '''''乡镇到养老院的路径条数(+1表示Excel表的表头占一行)
+    Const d_0 As Double = 1   '服务半径d0为1个小时
+    
+    Dim arrDk(xiangNum) As Variant
+    Dim arrSj(YanglaoNum) As Variant
+    Dim arrSDTravelTime(xiangNum, YanglaoNum) As Double ''''''各乡镇到各敬老院时间
+    
+    '计算Ai
+    Dim i As Integer 'i表示第i个需求点
+    Dim j As Integer 'j表示供应点是数量
+    Dim AiSum As Double ''''''AiSum表示第i个乡镇的可达性
+    Dim fenzi As Double
+    Dim fenmu As Double
+    
+    i = 1
+    j = 1
+    AiSum = 0
+    
+    For i = 1 To xiangNum
+        arrDk(i) = Sheet1.Cells(i + 1, 3).Value
+    Next
+    
+    For j = 1 To YanglaoNum
+        arrSj(j) = Sheet1.Cells(j + 1, 6).Value ''''''6表示Sj所在的位置
+    Next
+
+    '将EXCEL表Sheets(3)中的乡镇（i）到敬老院（j）的Traveltime读入到arrSDTravelTime(i, j)
+    Dim x As Integer
+    x = 2
+    For i = 1 To xiangNum
+        For j = 1 To YanglaoNum
+            col = Sheet2.Cells(x, 4)
+            arrSDTravelTime(i, col) = Sheet2.Cells(x, 5)
+            x = x + 1
+        Next
+    Next
+    
+    '两步计算可达性
+    For i = 1 To xiangNum
+        For j = 1 To YanglaoNum
+            fenzi = 0
+            fenmu = 0
+                
+            If (arrSDTravelTime(i, j) <= d_0) Then
+               fenzi = arrSj(j)
+                
+                For k = 1 To xiangNum
+                    If (arrSDTravelTime(k, j) <= d_0) Then
+                        fenmu = arrDk(k) + fenmu
+                    End If
+                Next
+                If (fenmu <> 0) Then
+                    AiSum = fenzi / fenmu + AiSum
+                End If
+            End If
+
+        Next
+        Sheet1.Cells(i + 1, 8) = AiSum
+        AiSum = 0
+    Next
+    
+End Sub
+
